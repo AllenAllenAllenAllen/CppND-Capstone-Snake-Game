@@ -60,17 +60,18 @@ void Game::GenerateFood() {
   if (num_foods <= foods.size()) {
     return;
   }
-  for (int i = 0; i < num_foods - foods.size(); i++) {
+  int curr_size = foods.size();
+  for (int i = 0; i < num_foods - curr_size; i++) {
     double number = dis(gen);
     if (number < 4) {
       // green candy (same score but no speed addition)
       foods.emplace_back(Food(0x00, 0x80, 0x00, 1, false));
     } else if (number > 6) {
       // orange candy (same as before)
-      foods.emplace_back(Food(0xFF, 0xCC, 0x00, 1, true));
+      foods.emplace_back(Food(0x80, 0x00, 0x00, 2, true));
     } else {
       // red candy (double score with speed addition)
-      foods.emplace_back(Food(0x80, 0x00, 0x00, 2, true));
+      foods.emplace_back(Food(0xFF, 0xCC, 0x00, 1, true));
     }
   }
 }
@@ -81,10 +82,15 @@ void Game::PlaceFood(Food &food) {
     x = random_w(engine);
     y = random_h(engine);
 
+    bool is_occupied_by_food = false;
     for (auto &f : foods) {
       if (x == f.position.x && y == f.position.y) {
-        continue;
+        is_occupied_by_food = true;
+        break;
       }
+    }
+    if (is_occupied_by_food) {
+      continue;
     }
 
     // Check that the location is not occupied by a snake item before placing
@@ -106,7 +112,8 @@ void Game::Update() {
   int new_y = static_cast<int>(snake.head_y);
 
   // Check if there's food over here
-  for (auto &food : foods) {
+  for (int i = 0; i < foods.size(); i++) {
+    Food food = foods[i];
     if (food.position.x != new_x || food.position.y != new_y) {
       continue;
     }
@@ -114,9 +121,13 @@ void Game::Update() {
       snake.speed += 0.02;
     }
     score += food.points;
+    foods.erase(foods.begin() + i);
     snake.GrowBody();
     GenerateFood();
-    PlaceFood(foods.back());
+    for (auto &f : foods) {
+      PlaceFood(f);
+    }
+    return;
   }
 }
 

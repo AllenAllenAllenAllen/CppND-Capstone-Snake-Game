@@ -6,7 +6,9 @@ Game::Game(std::size_t grid_width, std::size_t grid_height)
     : snake(grid_width, grid_height),
       engine(dev()),
       random_w(0, static_cast<int>(grid_width)),
-      random_h(0, static_cast<int>(grid_height)) {
+      random_h(0, static_cast<int>(grid_height)),
+      dis(5.0, 2.0),
+      random_num(1, 3) {
   GenerateFood();
   for (auto &food : foods) {
     PlaceFood(food);
@@ -60,15 +62,15 @@ void Game::GenerateFood() {
   }
   for (int i = 0; i < num_foods - foods.size(); i++) {
     double number = dis(gen);
-    if (num < 4) {
+    if (number < 4) {
       // green candy (same score but no speed addition)
-      vector.emplace_back(Food(0x00, 0x80, 0x00, 1, false));
-    } else if (num > 6) {
+      foods.emplace_back(Food(0x00, 0x80, 0x00, 1, false));
+    } else if (number > 6) {
       // orange candy (same as before)
-      vector.emplace_back(Food(0xFF, 0xCC, 0x00, 1, true));
+      foods.emplace_back(Food(0xFF, 0xCC, 0x00, 1, true));
     } else {
       // red candy (double score with speed addition)
-      vector.emplace_back(Food(0x80, 0x00, 0x00, 2, true));
+      foods.emplace_back(Food(0x80, 0x00, 0x00, 2, true));
     }
   }
 }
@@ -80,7 +82,7 @@ void Game::PlaceFood(Food &food) {
     y = random_h(engine);
 
     for (auto &f : foods) {
-      if (x == f.pos.x && y == f.pos.y) {
+      if (x == f.position.x && y == f.position.y) {
         continue;
       }
     }
@@ -88,8 +90,8 @@ void Game::PlaceFood(Food &food) {
     // Check that the location is not occupied by a snake item before placing
     // food.
     if (!snake.SnakeCell(x, y)) {
-      food.x = x;
-      food.y = y;
+      food.position.x = x;
+      food.position.y = y;
       return;
     }
   }
@@ -105,7 +107,7 @@ void Game::Update() {
 
   // Check if there's food over here
   for (auto &food : foods) {
-    if (food.x != new_x || food.y != new_y) {
+    if (food.position.x != new_x || food.position.y != new_y) {
       continue;
     }
     if (food.inc_speed) {

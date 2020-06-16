@@ -5,7 +5,7 @@
 
 class Food {
  public:
-  Food(int r, int g, int b, bool blocked, int points, bool inc_speed)
+  Food(int r, int g, int b, int points, bool inc_speed)
    : r(r), g(g), b(b), points(points), inc_speed(inc_speed) {}
   
   int r;

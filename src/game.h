@@ -19,11 +19,11 @@ class Game {
 
  private:
   Snake snake;
-  vector<Food> foods;
+  std::vector<Food> foods;
 
   std::default_random_engine gen;
-  std::normal_distribution<double> dis(5.0, 2.0);
-  std::uniform_int_distribution<int> random_num(1, 3);
+  std::normal_distribution<double> dis;
+  std::uniform_int_distribution<int> random_num;
 
   std::random_device dev;
   std::mt19937 engine;

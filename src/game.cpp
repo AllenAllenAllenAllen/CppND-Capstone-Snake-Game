@@ -7,7 +7,10 @@ Game::Game(std::size_t grid_width, std::size_t grid_height)
       engine(dev()),
       random_w(0, static_cast<int>(grid_width)),
       random_h(0, static_cast<int>(grid_height)) {
-  PlaceFood();
+  GenerateFood();
+  for (auto &food : foods) {
+    PlaceFood(food);
+  }
 }
 
 void Game::Run(Controller const &controller, Renderer &renderer,
@@ -25,7 +28,7 @@ void Game::Run(Controller const &controller, Renderer &renderer,
     // Input, Update, Render - the main game loop.
     controller.HandleInput(running, snake);
     Update();
-    renderer.Render(snake, food);
+    renderer.Render(snake, foods);
 
     frame_end = SDL_GetTicks();
 
@@ -50,11 +53,38 @@ void Game::Run(Controller const &controller, Renderer &renderer,
   }
 }
 
-void Game::PlaceFood() {
+void Game::GenerateFood() {
+  int num_foods = random_num(engine);
+  if (num_foods <= foods.size()) {
+    return;
+  }
+  for (int i = 0; i < num_foods - foods.size(); i++) {
+    double number = dis(gen);
+    if (num < 4) {
+      // green candy (same score but no speed addition)
+      vector.emplace_back(Food(0x00, 0x80, 0x00, 1, false));
+    } else if (num > 6) {
+      // orange candy (same as before)
+      vector.emplace_back(Food(0xFF, 0xCC, 0x00, 1, true));
+    } else {
+      // red candy (double score with speed addition)
+      vector.emplace_back(Food(0x80, 0x00, 0x00, 2, true));
+    }
+  }
+}
+
+void Game::PlaceFood(Food &food) {
   int x, y;
   while (true) {
     x = random_w(engine);
     y = random_h(engine);
+
+    for (auto &f : foods) {
+      if (x == f.pos.x && y == f.pos.y) {
+        continue;
+      }
+    }
+
     // Check that the location is not occupied by a snake item before placing
     // food.
     if (!snake.SnakeCell(x, y)) {
@@ -74,12 +104,17 @@ void Game::Update() {
   int new_y = static_cast<int>(snake.head_y);
 
   // Check if there's food over here
-  if (food.x == new_x && food.y == new_y) {
-    score++;
-    PlaceFood();
-    // Grow snake and increase speed.
+  for (auto &food : foods) {
+    if (food.x != new_x || food.y != new_y) {
+      continue;
+    }
+    if (food.inc_speed) {
+      snake.speed += 0.02;
+    }
+    score += food.points;
     snake.GrowBody();
-    snake.speed += 0.02;
+    GenerateFood();
+    PlaceFood(foods.back());
   }
 }
 
